@@ -55,7 +55,7 @@ Posicion_Izquierda = int(Ancho_Pantalla / 2 - Ancho_Ventana / 2)  # Calcular pos
 Ventana_Principal.geometry(f'{Ancho_Ventana}x{Alto_Ventana}+{Posicion_Izquierda}+{Posicion_Superior}')  # Establecer posición.
 
 # Agregar un ícono a la ventana.
-Ventana_Principal.iconbitmap('C:/Users/tomas/Documents/Programación/Github/Programacion/Forrager/AFIP/Icon.ico') 
+Ventana_Principal.iconbitmap('G:/Mi unidad/AFIP/Icon.ico') 
 
 # Agregar una etiqueta para recordar al usuario.
 Etiqueta_Recordatorio = tk.Label(Ventana_Principal, text="Momento de facturar en AFIP", 

@@ -2,6 +2,15 @@
 # Paquetes.
 # -------------------------------------------------------------------------------------------------
 
+# 1. Establecer un registro de días y facturación en ese día.
+# 2. Cuando se clickea en el programa, automatiza los días según el último registro -5 si el último 
+# día es muy lejano.
+# 3. Acción de preguntar si las fechas son correctas por seguridad.
+
+# -------------------------------------------------------------------------------------------------
+# Paquetes.
+# -------------------------------------------------------------------------------------------------
+
 import os
 import time
 import shutil
@@ -58,10 +67,10 @@ Tipos_Condicion_IVA = {"IVA Responsable Inscripto": "1",
 
 Ruta_Descarga_Payway = 'C:/Users/tomas/Downloads'
 Nombre_Viejo = 'Movimientos En Linea en pesos Delimitado por comas.csv'
-Ruta_Nueva_Payway = 'J:/My Drive/Forraje/AFIP' 
+Ruta_Nueva_Payway = 'G:/Mi unidad/AFIP/Tablas' 
 Nombre_Nuevo = 'Payway.csv'
 Email_Payway = 'carolina8101924@gmail.com'
-Contraseña_Payway = '123Patricio$'
+Contraseña_Payway = '123Nogue$'
 Usuario_AFIP = '27202147025'
 Contraseña_AFIP = '123Patricio$'
 Empresa = 'MARQUEZ CAROLINA MARIEL'
@@ -73,7 +82,7 @@ Tipo_Pago = 'Contado'
 Tipo_Comprobante_Valor = Tipos_de_Comprobantes.get(Tipo_Comprobante)
 Tipo_Concepto_Valor = Tipos_de_Conceptos.get(Tipo_Concepto)
 Tipo_Condicion_IVA_Valor = Tipos_Condicion_IVA.get(Tipo_Condicion_IVA)
-RUTA_ICONO = 'C:/Users/tomas/Documents/Programación/Github/Programacion/Forrager/AFIP/Icon.ico'
+RUTA_ICONO = 'G:/Mi unidad/AFIP/Icon.ico'
 
 
 # -------------------------------------------------------------------------------------------------
@@ -236,7 +245,7 @@ def Descargar_CSV_De_Payway(Navegador: WebDriver, Email: str,
     Campo_Contraseña.send_keys(Keys.RETURN)
 
     # Esperar 30 segundos para asegurar que la página cargue completamente.
-    time.sleep(100)
+    time.sleep(30)
 
     URL_Movimientos = 'https://mi.payway.com.ar/movimientos/en-linea'
 
@@ -385,7 +394,7 @@ def Procesar_Y_Guardar_Dataframe(Dataframe: pd.DataFrame, Ruta_Salida: str):
     df['Fecha'] = Dataframe['FECHA']
 
     # DataFrame con precios.
-    Sistema = 'J:/My Drive/Forraje/Exportar.xls'
+    Sistema = 'G:/Mi unidad/Tablas y datos/Exportar.xls'
     df_Sistema = pd.read_excel(Sistema)
 
     def Asignar_Descripcion(DataFrame: pd.DataFrame, Precio: float) -> str:
@@ -740,13 +749,13 @@ if not Confirmado:
 # Etapa 1. Payway.
 
 # Abrir pestaña de Payway.
-#Payway = Inicializar_Navegador_Chrome()
+Payway = Inicializar_Navegador_Chrome()
 
 # Descargar documento de Payway.
-#Descargar_CSV_De_Payway(Payway, Email_Payway, Contraseña_Payway)
+Descargar_CSV_De_Payway(Payway, Email_Payway, Contraseña_Payway)
 
 # Esperar descarga del CSV.
-#Esperar_Descarga(f'{Ruta_Descarga_Payway}/{Nombre_Viejo}')
+Esperar_Descarga(f'{Ruta_Descarga_Payway}/{Nombre_Viejo}')
 
 # Mover y renombrar archivo CSV.
 Mover_Y_Renombrar_Archivo(Ruta_Descarga_Payway, Nombre_Viejo, 
