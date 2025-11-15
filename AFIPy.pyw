@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import os
+from pathlib import Path
 import time
 import shutil
 import openpyxl
@@ -60,14 +61,33 @@ Tipos_Condicion_IVA = {"IVA Responsable Inscripto": "1",
                        "IVA No Alcanzado": "15",
                        "Monotributista Trabajador Independiente Promovido": "16"}
 
+# -------------------------------------------------------------------------------------------------
+# Rutas.
+# -------------------------------------------------------------------------------------------------
+
+# Rutas dinámicas de usuario.
+Ruta_Usuario = Path.home()
+
+# Ruta de la carpeta actual.
+Ruta_Carpeta_Actual = Path.cwd()
+
+# Ruta de descargas del usuario.
+Ruta_Descargas = 'C:/Users/tomas/Downloads/'
+
+# Ruta fija de Payway.
+Ruta_Nueva_Payway = 'C:/Users/tomas/Documents/Codigo/AFIP/Tablas' 
+
+# Ruta del ícono.
+Ruta_Icono = 'C:/Users/tomas/Documents/Codigo/AFIP/Icon.ico'
+
+# Ruta de descarga del documento de Payway.
+Ruta_Descarga_Payway = 'C:/Users/tomas/Downloads/'
 
 # -------------------------------------------------------------------------------------------------
 # Variables globales.
 # -------------------------------------------------------------------------------------------------
 
-Ruta_Descarga_Payway = 'C:/Users/tomas/Downloads'
 Nombre_Viejo = 'Movimientos En Linea en pesos Delimitado por comas.csv'
-Ruta_Nueva_Payway = 'G:/Mi unidad/AFIP/Tablas' 
 Nombre_Nuevo = 'Payway.csv'
 Email_Payway = 'carolina8101924@gmail.com'
 Contraseña_Payway = '123Nogue$'
@@ -82,8 +102,6 @@ Tipo_Pago = 'Contado'
 Tipo_Comprobante_Valor = Tipos_de_Comprobantes.get(Tipo_Comprobante)
 Tipo_Concepto_Valor = Tipos_de_Conceptos.get(Tipo_Concepto)
 Tipo_Condicion_IVA_Valor = Tipos_Condicion_IVA.get(Tipo_Condicion_IVA)
-RUTA_ICONO = 'G:/Mi unidad/AFIP/Icon.ico'
-
 
 # -------------------------------------------------------------------------------------------------
 # Funciones.
@@ -150,7 +168,7 @@ def Verificar_Fechas(Fechas: List[str]) -> Tuple[bool, List[str]]:
 
     Root = tk.Tk()
     Root.withdraw()  # Ocultar Root.
-    Root.iconbitmap(RUTA_ICONO) 
+    Root.iconbitmap(Ruta_Icono) 
 
     # Formatear las fechas para mostrar.
     Primera_Fecha = Fechas[0]
@@ -394,7 +412,7 @@ def Procesar_Y_Guardar_Dataframe(Dataframe: pd.DataFrame, Ruta_Salida: str):
     df['Fecha'] = Dataframe['FECHA']
 
     # DataFrame con precios.
-    Sistema = 'G:/Mi unidad/Tablas y datos/Exportar.xls'
+    Sistema = 'C:/Users/tomas/Documents/Tablas y datos/Exportar.xls'
     df_Sistema = pd.read_excel(Sistema)
 
     def Asignar_Descripcion(DataFrame: pd.DataFrame, Precio: float) -> str:
@@ -758,14 +776,14 @@ Descargar_CSV_De_Payway(Payway, Email_Payway, Contraseña_Payway)
 Esperar_Descarga(f'{Ruta_Descarga_Payway}/{Nombre_Viejo}')
 
 # Mover y renombrar archivo CSV.
-Mover_Y_Renombrar_Archivo(Ruta_Descarga_Payway, Nombre_Viejo, 
-                         Ruta_Nueva_Payway, Nombre_Nuevo)
+Mover_Y_Renombrar_Archivo(str(Ruta_Descarga_Payway), Nombre_Viejo, 
+                         str(Ruta_Nueva_Payway), Nombre_Nuevo)
 
 
 # Etapa 2. Procesamiento del archivo CSV.
 
 # Crear DataFrame del CSV.
-df = pd.read_csv(Ruta_Nueva_Payway + '/' + Nombre_Nuevo, skiprows=1)
+df = pd.read_csv(os.path.join(Ruta_Nueva_Payway, Nombre_Nuevo), skiprows=1)
 
 # Dividir filas con valores mayores a 100000.
 df = Dividir_Filas_Por_Umbral(df, 'MONTO_BRUTO', 100000)
