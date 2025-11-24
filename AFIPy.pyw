@@ -68,20 +68,20 @@ Tipos_Condicion_IVA = {"IVA Responsable Inscripto": "1",
 # Rutas dinámicas de usuario.
 Ruta_Usuario = Path.home()
 
-# Ruta de la carpeta actual.
-Ruta_Carpeta_Actual = Path.cwd()
+# Ruta de la carpeta actual del proyecto.
+Ruta_Carpeta_Actual = Path(__file__).parent.resolve()
 
 # Ruta de descargas del usuario.
-Ruta_Descargas = 'C:/Users/tomas/Downloads/'
+Ruta_Descargas = Ruta_Usuario / 'Downloads'
 
-# Ruta fija de Payway.
-Ruta_Nueva_Payway = 'C:/Users/tomas/Documents/Codigo/AFIP/Tablas' 
+# Ruta de la carpeta Tablas.
+Ruta_Nueva_Payway = Ruta_Carpeta_Actual / 'Tablas'
 
 # Ruta del ícono.
-Ruta_Icono = 'C:/Users/tomas/Documents/Codigo/AFIP/Icon.ico'
+Ruta_Icono = Ruta_Carpeta_Actual / 'Icon.ico'
 
 # Ruta de descarga del documento de Payway.
-Ruta_Descarga_Payway = 'C:/Users/tomas/Downloads/'
+Ruta_Descarga_Payway = Ruta_Usuario / 'Downloads'
 
 # -------------------------------------------------------------------------------------------------
 # Variables globales.
@@ -168,7 +168,7 @@ def Verificar_Fechas(Fechas: List[str]) -> Tuple[bool, List[str]]:
 
     Root = tk.Tk()
     Root.withdraw()  # Ocultar Root.
-    Root.iconbitmap(Ruta_Icono) 
+    Root.iconbitmap(str(Ruta_Icono)) 
 
     # Formatear las fechas para mostrar.
     Primera_Fecha = Fechas[0]
@@ -412,8 +412,8 @@ def Procesar_Y_Guardar_Dataframe(Dataframe: pd.DataFrame, Ruta_Salida: str):
     df['Fecha'] = Dataframe['FECHA']
 
     # DataFrame con precios.
-    Sistema = 'C:/Users/tomas/Documents/Tablas y datos/Exportar.xls'
-    df_Sistema = pd.read_excel(Sistema)
+    Ruta_Sistema = Ruta_Carpeta_Actual / 'Tablas' / 'Exportar.xls'
+    df_Sistema = pd.read_excel(Ruta_Sistema)
 
     def Asignar_Descripcion(DataFrame: pd.DataFrame, Precio: float) -> str:
 
@@ -711,14 +711,22 @@ def Generar_Factura(Navegador: webdriver.Chrome, Punto_Venta: str,
    # Paso 6: Confirmar
    WebDriverWait(Navegador, 10).until(EC.presence_of_element_located(
        (By.XPATH, "//input[@value='Confirmar Datos...']")))
-   Boton_Confirmar = Navegador.find_element(By.XPATH, 
+   Boton_Confirmar = Navegador.find_element(By.XPATH,
        "//input[@value='Confirmar Datos...']")
    time.sleep(1)
    Boton_Confirmar.click()
 
-   Alerta = WebDriverWait(Navegador, 10).until(EC.alert_is_present())
-   Alerta.accept()
+   # Esperar el diálogo de confirmación jQuery UI y hacer clic en "Confirmar".
+   WebDriverWait(Navegador, 10).until(EC.presence_of_element_located(
+       (By.XPATH, "//button[.//span[text()='Confirmar']]")))
+   Boton_Confirmar_Dialog = Navegador.find_element(By.XPATH,
+       "//button[.//span[text()='Confirmar']]")
+   time.sleep(1)
+   Boton_Confirmar_Dialog.click()
 
+   # Esperar a que el comprobante se genere.
+   WebDriverWait(Navegador, 30).until(EC.presence_of_element_located(
+       (By.XPATH, "//input[@value='Menú Principal']")))
    Boton_Menu = Navegador.find_element(By.XPATH, "//input[@value='Menú Principal']")
    time.sleep(1)
    Boton_Menu.click()
@@ -753,7 +761,18 @@ def Cerrar_Todas_Las_Pestanas(Navegador: WebDriver) -> None:
 # -------------------------------------------------------------------------------------------------
 
 
-# Etapa 0. Fechas.
+# Etapa 0. Selección de modo y fechas.
+
+# Preguntar si se desea ejecutar Payway o solo AFIP.
+Root = tk.Tk()
+Root.withdraw()
+Root.iconbitmap(str(Ruta_Icono))
+
+Mensaje_Modo = "¿Desea descargar datos desde Payway?\n\n" \
+               "Sí: Descarga desde Payway y genera facturas en AFIP\n" \
+               "No: Solo genera facturas en AFIP (usa archivos existentes)"
+
+Ejecutar_Payway = messagebox.askyesno("Selección de modo", Mensaje_Modo)
 
 Fechas = Generar_Lista_Dias_Previos()
 
@@ -766,33 +785,42 @@ if not Confirmado:
 
 # Etapa 1. Payway.
 
-# Abrir pestaña de Payway.
-Payway = Inicializar_Navegador_Chrome()
+if Ejecutar_Payway:
+    # Abrir pestaña de Payway.
+    Payway = Inicializar_Navegador_Chrome()
 
-# Descargar documento de Payway.
-Descargar_CSV_De_Payway(Payway, Email_Payway, Contraseña_Payway)
+    # Descargar documento de Payway.
+    Descargar_CSV_De_Payway(Payway, Email_Payway, Contraseña_Payway)
 
-# Esperar descarga del CSV.
-Esperar_Descarga(f'{Ruta_Descarga_Payway}/{Nombre_Viejo}')
+    # Esperar descarga del CSV.
+    Esperar_Descarga(str(Ruta_Descarga_Payway / Nombre_Viejo))
 
-# Mover y renombrar archivo CSV.
-Mover_Y_Renombrar_Archivo(str(Ruta_Descarga_Payway), Nombre_Viejo, 
-                         str(Ruta_Nueva_Payway), Nombre_Nuevo)
+    # Mover y renombrar archivo CSV.
+    Mover_Y_Renombrar_Archivo(str(Ruta_Descarga_Payway), Nombre_Viejo,
+                             str(Ruta_Nueva_Payway), Nombre_Nuevo)
 
 
-# Etapa 2. Procesamiento del archivo CSV.
+    # Etapa 2. Procesamiento del archivo CSV.
 
-# Crear DataFrame del CSV.
-df = pd.read_csv(os.path.join(Ruta_Nueva_Payway, Nombre_Nuevo), skiprows=1)
+    # Crear DataFrame del CSV.
+    df = pd.read_csv(Ruta_Nueva_Payway / Nombre_Nuevo, skiprows=1)
 
-# Dividir filas con valores mayores a 100000.
-df = Dividir_Filas_Por_Umbral(df, 'MONTO_BRUTO', 100000)
+    # Dividir filas con valores mayores a 100000.
+    df = Dividir_Filas_Por_Umbral(df, 'MONTO_BRUTO', 100000)
 
-# Ruta del archivo con los precios a subir.
-Archivo = f'{Ruta_Nueva_Payway}/AFIP.xlsx'
+    # Ruta del archivo con los precios a subir.
+    Archivo = Ruta_Nueva_Payway / 'AFIP.xlsx'
 
-# Retocar CSV para que quede preparado para su utilización.
-Procesar_Y_Guardar_Dataframe(df, Archivo)
+    # Retocar CSV para que quede preparado para su utilización.
+    Procesar_Y_Guardar_Dataframe(df, Archivo)
+else:
+    # Verificar que exista el archivo AFIP.xlsx.
+    Archivo = Ruta_Nueva_Payway / 'AFIP.xlsx'
+    if not Archivo.exists():
+        messagebox.showerror("Error",
+            f"No se encontró el archivo AFIP.xlsx en {Ruta_Nueva_Payway}\n" \
+            "Por favor ejecute primero el modo completo con Payway.")
+        exit()
 
 # Crear DataFrame final para facturar.
 df = pd.read_excel(Archivo)
@@ -837,4 +865,5 @@ else:
 
 # Cerrar todas las pestañas.
 #Cerrar_Todas_Las_Pestanas(Afip)
-#Cerrar_Todas_Las_Pestanas(Payway)
+#if Ejecutar_Payway:
+#    Cerrar_Todas_Las_Pestanas(Payway)
